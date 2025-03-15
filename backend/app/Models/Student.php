@@ -15,7 +15,7 @@ class Student extends Authenticatable {
      * @var string
      * */ 
 
-    protected $table = 'student';
+    protected $table = 'students';
 
      /**
       *  Atributos que precisam ser preenchidos 

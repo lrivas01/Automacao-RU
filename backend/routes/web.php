@@ -24,4 +24,12 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+Route::middleware(['auth:students'])->group(function () {
+    Route::get('/student/dashboard', function () {
+        return Inertia::render('Student/Dashboard', [
+            'student' => Auth::guard('students')->user(),
+        ]);
+    })->name('student.dashboard');
+});
+
 require __DIR__.'/auth.php';

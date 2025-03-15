@@ -7,14 +7,14 @@ use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class AuthenticatedSessionController extends Controller
-{
+class AuthenticatedSessionController extends Controller {
     /**
-     * Display the login view.
+     * Exibe a tela de login.
      */
     public function create(): Response {
         return Inertia::render('Auth/Login', [
@@ -24,27 +24,46 @@ class AuthenticatedSessionController extends Controller
     }
 
     /**
-     * Handle an incoming authentication request.
+     * Processa o login.
      */
     public function store(LoginRequest $request): RedirectResponse {
-        $request->authenticate();
+        $request->authenticate(); // Autentica o usuário
+        $request->session()->regenerate(); // Protege a sessão
 
-        $request->session()->regenerate();
+        Log::info('Usuário autenticado', [
+            'email' => $request->email,
+            'guard_students' => Auth::guard('students')->check(),
+            'guard_web' => Auth::guard('web')->check(),
+        ]);
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        // Verifica se o usuário é um estudante
+        if (Auth::guard('students')->user()) {
+            return redirect()->route('student.dashboard')->with('status', 'Login bem-sucedido!');
+        }
+
+        // Caso contrário, assume que é um administrador
+        if (Auth::guard('web')->user()) {
+            return redirect()->route('admin.dashboard')->with('status', 'Login bem-sucedido!');
+        }
+
+        return redirect()->route('login')->withErrors([
+            'email' => 'Erro ao autenticar. Verifique suas credenciais.',
+        ]);
     }
 
     /**
-     * Destroy an authenticated session.
+     * Realiza o logout.
      */
-    public function destroy(Request $request): RedirectResponse
-    {
-        Auth::guard('web')->logout();
+    public function destroy(Request $request): RedirectResponse {
+        if (Auth::guard('students')->check()) {
+            Auth::guard('students')->logout();
+        } elseif (Auth::guard('web')->check()) {
+            Auth::guard('web')->logout();
+        }
 
         $request->session()->invalidate();
-
         $request->session()->regenerateToken();
 
-        return redirect('/');
+        return redirect('/')->with('status', 'Logout realizado com sucesso!');
     }
 }

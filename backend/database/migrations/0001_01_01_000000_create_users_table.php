@@ -4,9 +4,9 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration  {
+return new class extends Migration {
     
-    private $connection = 'pgsql';
+    protected $connection = 'pgsql'; // Change from private to protected
 
     public function up(): void {
         Schema::create('users', function (Blueprint $table) {

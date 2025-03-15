@@ -19,16 +19,17 @@ class RegisteredStudentController extends Controller {
         return Inertia::render('Auth/Register'); 
     }
 
-    public function store(Request $request): RedirectResponse{
+    public function store(Request $request): RedirectResponse {
 
-        // validação dos dados como os dados devem chegar do frotend 
+        // validação dos dados como os dados devem chegar do frontend 
         $request->validate([
-            'ra' => 'required|unique:'. Student::class,
+            'ra' => 'required|unique:students,ra',
             'name' => 'required|string|max:255',
-            'email' => 'required|string|lowercase|email|max:255|unique:'. Student::class,
-            'course' => 'required|string|string|lowercase|max:255',
+            'email' => 'required|string|lowercase|email|max:255|unique:students,email',
+            'course' => 'required|string|lowercase|max:255',
             'password' => ['required', 'min:8', 'confirmed', Rules\Password::defaults()],
         ]);
+
         // inserindo os dados validados do frontend no banco de dados 
         $student = Student::create([
             'ra' => $request->ra,
@@ -41,8 +42,8 @@ class RegisteredStudentController extends Controller {
 
         event(new Registered($student));
 
-        auth::login($student);
+        Auth::guard('students')->login($student);
 
-        return redirect(route('dashboard', absolute: false));
+        return redirect(route('student.dashboard'));
     }
 }
